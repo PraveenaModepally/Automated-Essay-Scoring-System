@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automated Essay Scoring</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #4a6baf 0%, #3a5a9f 100%);
+            color: white;
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('https://images.unsplash.com/photo-1455390582262-044cdead277a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1973&q=80') center/cover;
+            opacity: 0.15;
+        }
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+        .essay-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .score-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .score-display {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #4a6baf;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .progress-bar {
+            height: 12px;
+            background-color: #e9ecef;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #4a6baf 0%, #6a8bcf 100%);
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 2px 5px rgba(74, 107, 175, 0.3);
+        }
+        .feedback-item {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+        .feedback-item:hover {
+            background-color: #f8f9ff;
+            transform: translateX(5px);
+        }
+        .feedback-item:last-child {
+            border-bottom: none;
+        }
+        .feedback-category {
+            font-weight: bold;
+            color: #4a6baf;
+            display: flex;
+            align-items: center;
+        }
+        .feedback-category i {
+            margin-right: 8px;
+            font-size: 1.2rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4a6baf 0%, #3a5a9f 100%);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 8px rgba(74, 107, 175, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #3a5a9f 0%, #4a6baf 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(74, 107, 175, 0.4);
+        }
+        textarea {
+            min-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+        textarea:focus {
+            border-color: #4a6baf;
+            box-shadow: 0 0 0 0.25rem rgba(74, 107, 175, 0.25);
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 3rem 0;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4a6baf;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #4a6baf;
+            margin-bottom: 1rem;
+        }
+        .feature-card {
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .hero-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .category-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+        .feedback-highlight {
+            background-color: #f0f4ff;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #4a6baf;
+        }
+        .floating-image {
+            position: absolute;
+            right: -50px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            opacity: 0.9;
+            z-index: 0;
+        }
+        .section-title {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+        }
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #4a6baf 0%, #6a8bcf 100%);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center header-content">
+                    <h1 class="display-4 fw-bold mb-3">Automated Essay Scoring</h1>
+                    <p class="lead mb-4">Get instant, accurate feedback on your writing with our advanced AI-powered essay scoring system</p>
+                    <img src="https://images.unsplash.com/photo-1588072432836-e10032774350?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80" alt="Writing illustration" class="hero-image img-fluid" style="max-height: 300px; object-fit: cover;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="essay-container">
+                    <h3 class="section-title">Enter Your Essay</h3>
+                    <form id="essayForm">
+                        <div class="mb-4">
+                            <label for="essayPrompt" class="form-label fw-bold">Essay Prompt</label>
+                            <select class="form-select" id="essayPrompt">
+                                <option value="general">General Essay</option>
+                                <option value="argumentative">Argumentative Essay</option>
+                                <option value="narrative">Narrative Essay</option>
+                                <option value="descriptive">Descriptive Essay</option>
+                                <option value="expository">Expository Essay</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="essayText" class="form-label fw-bold">Your Essay</label>
+                            <textarea class="form-control" id="essayText" rows="12" placeholder="Type or paste your essay here..."></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Score My Essay
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p class="mt-3 fs-5">Analyzing your essay with AI...</p>
+                    <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=765&q=80" alt="AI analyzing" class="img-fluid mt-4" style="max-height: 150px; border-radius: 8px;">
+                </div>
+
+                <div class="essay-container" id="resultsContainer" style="display: none;">
+                    <h3 class="section-title">Detailed Feedback</h3>
+                    <div id="detailedFeedback"></div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="score-card" id="scoreCard" style="display: none; position: relative;">
+                    <img src="https://images.unsplash.com/photo-1577896851231-70ef18881754?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Score ribbon" class="floating-image d-none d-lg-block">
+                    <h4 class="text-center mb-4 fw-bold">Your Essay Score</h4>
+                    <div class="score-display" id="scoreDisplay">0</div>
+                    <div class="text-center mb-3 fs-5">out of 100</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <h5 class="mt-4 fw-bold"><i class="fas fa-star me-2"></i>Key Feedback Areas</h5>
+                    <div class="feedback-list" id="feedbackList">
+                        <!-- Feedback items will be added here -->
+                    </div>
+                </div>
+
+                <div class="score-card">
+                    <h4 class="section-title">How It Works</h4>
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="AI analyzing text" class="img-fluid rounded mb-3">
+                            <p>Our advanced AI analyzes your essay across multiple dimensions to provide comprehensive feedback and an accurate score.</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="feature-card">
+                                <i class="fas fa-spell-check feature-icon"></i>
+                                <h5>Grammar Check</h5>
+                                <p>Identifies grammatical errors and suggests corrections</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="feature-card">
+                                <i class="fas fa-book feature-icon"></i>
+                                <h5>Vocabulary Analysis</h5>
+                                <p>Evaluates word choice and sophistication</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="feature-card">
+                                <i class="fas fa-project-diagram feature-icon"></i>
+                                <h5>Structure Review</h5>
+                                <p>Assesses organization and logical flow</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="feature-card">
+                                <i class="fas fa-lightbulb feature-icon"></i>
+                                <h5>Content Quality</h5>
+                                <p>Evaluates ideas, arguments, and evidence</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="score-card">
+                    <h4 class="section-title">Why Use Our System?</h4>
+                    <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Student writing" class="img-fluid rounded mb-3">
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Instant results</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Detailed feedback</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Actionable suggestions</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> 24/7 availability</li>
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> Free to use</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light py-5 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center text-md-start">
+                    <h5>Automated Essay Scoring</h5>
+                    <p class="text-muted">Helping students improve their writing since 2025</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <a href="#" class="text-decoration-none me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-decoration-none me-3"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-decoration-none me-3"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="text-decoration-none"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-12 text-center">
+                    <p class="text-muted small">© 2025 Automated Essay Scoring System. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('essayForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const essayText = document.getElementById('essayText').value.trim();
+            if (!essayText) {
+                alert('Please enter your essay before submitting.');
+                return;
+            }
+            
+            // Show loading spinner
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            document.getElementById('scoreCard').style.display = 'none';
+            
+            // Simulate API call with timeout
+            setTimeout(function() {
+                analyzeEssay(essayText);
+            }, 2000);
+        });
+        
+        function analyzeEssay(essayText) {
+            // Hide loading spinner
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            // Generate random score for demo (in a real app, this would come from an API)
+            const score = Math.floor(Math.random() * 30) + 70; // Random score between 70-100
+            
+            // Update score display
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('progressFill').style.width = score + '%';
+            
+            // Generate feedback
+            const feedbackList = document.getElementById('feedbackList');
+            feedbackList.innerHTML = '';
+            
+            const feedbackItems = [
+                { category: 'Grammar', feedback: 'Good overall grammar with minor errors', score: Math.floor(Math.random() * 20) + 80, icon: 'fa-spell-check' },
+                { category: 'Vocabulary', feedback: 'Appropriate word choice with some advanced vocabulary', score: Math.floor(Math.random() * 20) + 75, icon: 'fa-book' },
+                { category: 'Organization', feedback: 'Clear structure but could improve transitions', score: Math.floor(Math.random() * 20) + 70, icon: 'fa-project-diagram' },
+                { category: 'Content', feedback: 'Strong main ideas with good supporting details', score: Math.floor(Math.random() * 20) + 85, icon: 'fa-lightbulb' },
+                { category: 'Style', feedback: 'Engaging voice but could vary sentence structure more', score: Math.floor(Math.random() * 20) + 78, icon: 'fa-pen-fancy' }
+            ];
+            
+            feedbackItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'feedback-item';
+                div.innerHTML = `
+                    <div class="feedback-category">
+                        <i class="fas ${item.icon}"></i>
+                        ${item.category}: ${item.score}/100
+                    </div>
+                    <div class="mt-2">${item.feedback}</div>
+                `;
+                feedbackList.appendChild(div);
+            });
+            
+            // Generate detailed feedback
+            const detailedFeedback = document.getElementById('detailedFeedback');
+            detailedFeedback.innerHTML = `
+                <div class="feedback-highlight">
+                    <h5><i class="fas fa-spell-check me-2"></i>Grammar Analysis</h5>
+                    <p>Your essay demonstrates strong grammatical control with only minor errors. Pay attention to subject-verb agreement in complex sentences.</p>
+                    <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80" alt="Grammar check" class="img-fluid rounded mt-2" style="max-height: 150px; width: 100%; object-fit: cover;">
+                </div>
+                
+                <div class="feedback-highlight">
+                    <h5><i class="fas fa-book me-2"></i>Vocabulary Assessment</h5>
+                    <p>You've used a range of vocabulary appropriate for this level. Consider incorporating more domain-specific terms where relevant.</p>
+                </div>
+                
+                <div class="feedback-highlight">
+                    <h5><i class="fas fa-project-diagram me-2"></i>Organization Feedback</h5>
+                    <p>The essay has a clear introduction, body, and conclusion. To improve, work on smoother transitions between paragraphs.</p>
+                    <img src="https://images.unsplash.com/photo-1546410531-bb4caa6b424d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1171&q=80" alt="Essay structure" class="img-fluid rounded mt-2" style="max-height: 150px; width: 100%; object-fit: cover;">
+                </div>
+                
+                <div class="feedback-highlight">
+                    <h5><i class="fas fa-lightbulb me-2"></i>Content Evaluation</h5>
+                    <p>Your main ideas are well-developed and supported with relevant details. Some points could benefit from additional examples.</p>
+                </div>
+                
+                <div class="feedback-highlight">
+                    <h5><i class="fas fa-pen-fancy me-2"></i>Style Suggestions</h5>
+                    <p>Your writing voice is engaging. Try varying sentence length and structure to create more rhythm in your writing.</p>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <strong><i class="fas fa-check-circle me-2"></i>Overall:</strong> This is a strong essay with clear strengths in content and organization. Focus on refining transitions and sentence variety to take your writing to the next level.
+                </div>
+            `;
+            
+            // Show results
+            document.getElementById('scoreCard').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('scoreCard').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
+</html>
